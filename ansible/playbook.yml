@@ -1,0 +1,8 @@
+---
+- name: Deploy cloud-1
+  hosts: servers
+  become: true
+  roles:
+    - docker
+    - ssl
+    - deploy

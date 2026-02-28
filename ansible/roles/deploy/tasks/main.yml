@@ -1,0 +1,14 @@
+- name: Create directory
+  file:
+    path: /opt/cloud-1
+    state: directory
+
+- name: Copy srcs to remote server
+  copy:
+    src: ../../../srcs/
+    dest: /opt/cloud-1/
+
+- name: Run docker-compose
+  command: docker-compose up -d
+  args:
+    chdir: /opt/cloud-1

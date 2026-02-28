@@ -1,0 +1,15 @@
+- name: Create directory
+  file:
+    path: /etc/nginx/ssl
+    state: directory
+
+- name: Install openssl
+  apt:
+    name: openssl
+    state: present
+    update_cache: yes
+  
+- name: Generate certiifcate
+  command: openssl req -x509 -nodes -days 365 -newkey rsa:2048 -subj "/C=FR/ST=IDF/L=Paris/O=Cloud-1/CN=cloud-1" -keyout /etc/nginx/ssl/private.key -out /etc/nginx/ssl/cert.crt
+  args:
+    creates: /etc/nginx/ssl/cert.crt
