@@ -1,0 +1,19 @@
+version: 3.8
+
+services:
+  nginx:
+    image: nginx:latest
+    port: 80
+
+  mysql:
+    image: mysql:latest
+    port: 3306
+    
+
+  wordpress:
+    port: 9000
+
+  phpmyadmin:
+    port: 80
+
+  volumes:
