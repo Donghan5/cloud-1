@@ -1,19 +1,74 @@
-version: 3.8
+version: '3.8'
 
 services:
   nginx:
-    image: nginx:latest
-    port: 80
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - cloud-1
+    depends_on:
+      - mysql
+      - wordpress
+      - phpmyadmin
+    restart: unless-stopped
+
 
   mysql:
-    image: mysql:latest
-    port: 3306
-    
+    image: mysql:8.0
+    volumes:
+      - ./mysql:/var/lib/mysql
+    networks:
+      - cloud-1
+    expose:
+      - "3306"
+    restart: unless-stopped
+    env_file: .env
 
   wordpress:
-    port: 9000
+    build:
+      context: ./wordpress
+      dockerfile: Dockerfile
+    volumes:
+      - ./wordpress:/var/www/html
+    networks:
+      - cloud-1
+    expose:
+      - "9000"
+    depends_on:
+      - mysql
+    env_file: .env
+    restart: unless-stopped
 
   phpmyadmin:
-    port: 80
+    image: phpmyadmin:latest
+    networks:
+      - cloud-1
+    expose:
+      - "80"
+    depends_on:
+      - mysql
+    env_file: .env
+    restart: unless-stopped
 
-  volumes:
+volumes:
+  mysql:
+    driver: local
+    driver_opts:
+      type: 'none'
+      device: '/var/lib/mysql'
+      o: 'bind'
+  
+  wordpress:
+    driver: local
+    driver_opts:
+      type: 'none'
+      device: '/var/lib/wordpress'
+      o: 'bind'
+
+networks:
+  cloud-1:
+    driver: bridge
