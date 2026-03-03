@@ -9,6 +9,6 @@
     dest: /opt/cloud-1/
 
 - name: Run docker-compose
-  command: docker-compose up -d
+  command: docker-compose up -d --build
   args:
     chdir: /opt/cloud-1

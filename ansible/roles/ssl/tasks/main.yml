@@ -10,6 +10,6 @@
     update_cache: yes
   
 - name: Generate certiifcate
-  command: openssl req -x509 -nodes -days 365 -newkey rsa:2048 -subj "/C=FR/ST=IDF/L=Paris/O=Cloud-1/CN=cloud-1" -keyout /etc/nginx/ssl/private.key -out /etc/nginx/ssl/cert.crt
+  command: openssl req -x509 -nodes -days 365 -newkey rsa:2048 -subj "/C=FR/ST=IDF/L=Paris/O=Cloud-1/CN=cloud-1" -keyout /etc/nginx/ssl/key.pem -out /etc/nginx/ssl/cert.pem
   args:
-    creates: /etc/nginx/ssl/cert.crt
+    creates: /etc/nginx/ssl/cert.pem
