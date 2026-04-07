@@ -97,6 +97,20 @@ PMA_USER=your-pma-user
 PMA_PASSWORD=your-pma-password
 ```
 
+### 2-1. Encrypt environment variables (recommended)
+
+```bash
+ansible-vault encrypt srcs/.env --vault-password-file .vault_pass
+```
+
+Then deploy with:
+
+```bash
+ansible-playbook ansible/playbook.yml -i ansible/inventory/hosts.ini --vault-password-file .vault_pass
+```
+
+> Make sure `.vault_pass` is added to `.gitignore`.
+
 ### 3. Deploy
 
 ```bash

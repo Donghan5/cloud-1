@@ -55,6 +55,33 @@ services:
       - mysql
     env_file: .env
     restart: unless-stopped
+  
+  node_exporter:
+    image: prom/node-exporter:latest
+    networks:
+      - cloud-1
+  
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - cloud-1
+    depends_on:
+      - node_exporter
+  
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - ./grafana/provisioning/datasources/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - ./grafana/provisioning/dashboards/dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yml
+      - ./grafana/provisioning/dashboards/node-exporter.json:/etc/grafana/provisioning/dashboards/node-exporter.json
+    networks:
+      - cloud-1
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
 
 volumes:
   mysql:
