@@ -1,15 +1,57 @@
-- name: Create directory
-  file:
+- name: Create private TLS directory
+  ansible.builtin.file:
     path: /etc/nginx/ssl
     state: directory
+    owner: root
+    group: root
+    mode: '0700'
 
 - name: Install openssl
-  apt:
+  ansible.builtin.apt:
     name: openssl
     state: present
-    update_cache: yes
+    update_cache: true
+
+- name: Check whether the self-signed certificate exists
+  ansible.builtin.stat:
+    path: /etc/nginx/ssl/cert.pem
+  register: cloud1_certificate
+
+- name: Check whether the self-signed private key exists
+  ansible.builtin.stat:
+    path: /etc/nginx/ssl/key.pem
+  register: cloud1_private_key
   
-- name: Generate certiifcate
-  command: openssl req -x509 -nodes -days 365 -newkey rsa:2048 -subj "/C=FR/ST=IDF/L=Paris/O=Cloud-1/CN=cloud-1" -keyout /etc/nginx/ssl/key.pem -out /etc/nginx/ssl/cert.pem
-  args:
-    creates: /etc/nginx/ssl/cert.pem
+- name: Generate self-signed certificate when neither TLS file exists
+  ansible.builtin.command:
+    argv:
+      - openssl
+      - req
+      - -x509
+      - -nodes
+      - -days
+      - '365'
+      - -newkey
+      - rsa:2048
+      - -subj
+      - /C=FR/ST=IDF/L=Paris/O=Cloud-1/CN=cloud-1
+      - -keyout
+      - /etc/nginx/ssl/key.pem
+      - -out
+      - /etc/nginx/ssl/cert.pem
+  when: not cloud1_certificate.stat.exists and not cloud1_private_key.stat.exists
+
+- name: Fail when only one TLS file exists
+  ansible.builtin.fail:
+    msg: /etc/nginx/ssl/cert.pem and key.pem must either both exist or both be absent.
+  when: cloud1_certificate.stat.exists != cloud1_private_key.stat.exists
+
+- name: Restrict TLS file permissions
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: /etc/nginx/ssl/cert.pem, mode: '0644' }
+    - { path: /etc/nginx/ssl/key.pem, mode: '0600' }

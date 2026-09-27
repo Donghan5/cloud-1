@@ -1,14 +1,43 @@
-- name: Create directory
-  file:
+- name: Create deployment directory
+  ansible.builtin.file:
     path: /opt/cloud-1
     state: directory
+    owner: root
+    group: root
+    mode: '0750'
 
 - name: Copy srcs to remote server
-  copy:
+  ansible.builtin.copy:
     src: ../../../srcs/
     dest: /opt/cloud-1/
+    owner: root
+    group: root
+    mode: preserve
+    directory_mode: '0750'
 
-- name: Run docker-compose
-  command: docker-compose up -d --build
-  args:
-    chdir: /opt/cloud-1
+- name: Copy and decrypt deployment environment file
+  ansible.builtin.copy:
+    src: ../../../srcs/.env
+    dest: /opt/cloud-1/.env
+    owner: root
+    group: root
+    mode: '0600'
+    decrypt: true
+
+- name: Restrict deployment environment file permissions
+  ansible.builtin.file:
+    path: /opt/cloud-1/.env
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Deploy Compose project
+  community.docker.docker_compose_v2:
+    project_src: /opt/cloud-1
+    state: present
+    build: policy
+    pull: missing
+    recreate: auto
+    wait: true
+    wait_timeout: 180
+  register: cloud1_compose

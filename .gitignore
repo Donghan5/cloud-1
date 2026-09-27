@@ -1,3 +1,7 @@
 # ansible
 ansible/inventory/hosts.ini
 .env
+srcs/.env
+.vault_pass
+*.vault_pass
+ansible/*.retry

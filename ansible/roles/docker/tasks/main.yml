@@ -1,39 +1,55 @@
-- name: Install dependencies
-  apt:
-    name: # install dependencies (list of packages)
+- name: Install Docker repository prerequisites
+  ansible.builtin.apt:
+    name:
       - apt-transport-https
       - ca-certificates
       - curl
     state: present
-    update_cache: yes
+    update_cache: true
+
+- name: Create APT keyring directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
  
-- name: Add Docker's official GPG key
-  apt_key:
+- name: Install Docker repository signing key
+  ansible.builtin.get_url:
     url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+
+- name: Derive Docker repository architecture
+  ansible.builtin.set_fact:
+    docker_repository_architecture: "{{ {'x86_64': 'amd64', 'aarch64': 'arm64', 'armv7l': 'armhf'}.get(ansible_architecture, ansible_architecture) }}"
+
+- name: Require a supported Ubuntu host
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == 'Ubuntu'
+    fail_msg: This playbook currently supports Ubuntu hosts only.
 
 - name: Add Docker APT repository
-  apt_repository:
-    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ docker_repository_architecture }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    filename: docker
     state: present
 
-- name: Install Docker
-  apt:
-    name: # install docker
+- name: Install Docker Engine and Compose plugin
+  ansible.builtin.apt:
+    name:
       - docker-ce
       - docker-ce-cli
       - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
     state: present
-    update_cache: yes
+    update_cache: true
   
-- name: Install docker-compose
-  get_url:
-    url: https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64
-    dest: /usr/local/bin/docker-compose
-    mode: '0755' # make it executable
-
 - name: Start Docker service
-  systemd:
+  ansible.builtin.systemd:
     name: docker
-    enabled: yes
+    enabled: true
     state: started
